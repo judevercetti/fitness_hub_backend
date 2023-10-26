@@ -3,8 +3,6 @@ from rest_framework import viewsets, filters
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.views import View
-from xhtml2pdf import pisa
-from io import BytesIO
 
 from .models import Attendance, Member, MembershipPlan, Payment
 from .serializers import AttendanceSerializer, MemberSerializer, MembershipPlanSerializer, PaymentSerializer
