@@ -3,9 +3,33 @@ from rest_framework import viewsets, filters
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.views import View
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.db.models import Sum
 
-from .models import Attendance, Member, MembershipPlan, Payment
-from .serializers import AttendanceSerializer, MemberSerializer, MembershipPlanSerializer, PaymentSerializer
+from .models import Attendance, Equipment, Member, MembershipPlan, Payment
+from .serializers import AttendanceSerializer, EquipmentSerializer, MemberSerializer, MembershipPlanSerializer, PaymentSerializer
+
+
+class DashboardView(APIView):
+    def get(self, request, format=None):
+        member_count = Member.objects.count()
+        payment_count = Payment.objects.count()
+        enrollment_count = 0
+        attendance_count = Attendance.objects.count()
+        payment_amount = Payment.objects.aggregate(total=Sum('amount'))['total']
+        
+
+        data = {
+            'member_count': member_count,
+            'payment_count': payment_count,
+            'enrollment_count': enrollment_count,
+            'attendance_count': attendance_count,
+            'payment_amount': payment_amount,
+        }
+
+        return Response(data)
+    
 
 class MemberViewSet(viewsets.ModelViewSet):
     queryset = Member.objects.all().order_by('-id')
@@ -24,30 +48,26 @@ class PaymentViewSet(viewsets.ModelViewSet):
 class MembershipPlanViewSet(viewsets.ModelViewSet):
     queryset = MembershipPlan.objects.all()
     serializer_class = MembershipPlanSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description']
 
 
 class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['member__first_name', 'member__last_name'] 
 
+
+class EquipmentViewSet(viewsets.ModelViewSet):
+    queryset = Equipment.objects.all().order_by('-id')
+    serializer_class = EquipmentSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description']
 
 
 class PaymentReceiptView(View):
     def get(self, request, payment_id):
-        # payment_id = kwargs['payment_id']
         payment = Payment.objects.get(id=payment_id)
-        # Add logic to generate the receipt HTML here or render a template
         receipt_html = f"<h1>Payment Receipt</h1><p>Amount: ${payment.amount}</p>"  # Replace with your receipt content
         return render(request, 'payments/payment_receipt.html', {'payment': payment})
-        # payment = Payment.objects.get(id=payment_id)
-
-        # template = get_template('payments/payment_receipt.html')
-        # context = {'payment': payment}
-        # html = template.render(context)
-
-        # pdf = BytesIO()
-        # pisa.CreatePDF(BytesIO(html.encode('utf-8')), pdf)
-
-        # response = HttpResponse(pdf, content_type='application/pdf')
-        # response['Content-Disposition'] = 'filename="payment_receipt.pdf"'
-        # return html

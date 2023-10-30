@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Attendance, Member, MembershipPlan, Payment
+from .models import Attendance, Equipment, Member, MembershipPlan, Payment
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,11 +14,16 @@ class MembershipPlanSerializer(serializers.ModelSerializer):
         
         
 class AttendanceSerializer(serializers.ModelSerializer):
+    member_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Attendance
         fields = '__all__'
         
+    def get_member_name(self, obj):
+        return obj.member.__str__()
         
+
 class PaymentSerializer(serializers.ModelSerializer):
     member_name = serializers.SerializerMethodField()
 
@@ -28,4 +33,10 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     def get_member_name(self, obj):
         return obj.member.__str__()
+        
+
+class EquipmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Equipment
+        fields = '__all__'
         

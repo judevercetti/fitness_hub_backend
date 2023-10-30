@@ -2,10 +2,10 @@ from django.db import models
 
 class MembershipPlan(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    duration = models.IntegerField()
-    features = models.TextField()
+    duration = models.IntegerField(blank=True, null=True)
+    features = models.TextField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -58,7 +58,8 @@ class Equipment(models.Model):
         ('poor', 'Poor'),
     ]
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     condition = models.CharField(max_length=50, choices=CONDITION_CHOICES)
+    purchase_date = models.DateField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)

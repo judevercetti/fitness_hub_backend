@@ -4,13 +4,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.authtoken.views import obtain_auth_token
 from django.contrib.auth import views as auth_views
 
-from .views import AttendanceViewSet, MemberViewSet, MembershipPlanViewSet, PaymentReceiptView, PaymentViewSet
+from .views import AttendanceViewSet, DashboardView, MemberViewSet, MembershipPlanViewSet, PaymentReceiptView, PaymentViewSet, EquipmentViewSet
 
 router = routers.DefaultRouter()
 router.register(r'members', MemberViewSet)
-router.register(r'membership-plans', MembershipPlanViewSet)
-router.register(r'attendance', AttendanceViewSet)
+router.register(r'membershipplans', MembershipPlanViewSet)
+router.register(r'attendances', AttendanceViewSet)
 router.register(r'payments', PaymentViewSet)
+router.register(r'equipments', EquipmentViewSet)
 
 
 urlpatterns = [
@@ -22,6 +23,7 @@ urlpatterns = [
     # path('token-auth/', obtain_auth_token, name='token_auth'),
     # path('login/', auth_views.LoginView.as_view(), name='login'),
     # path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('payment/<int:payment_id>/receipt/', PaymentReceiptView.as_view(), name='payment_receipt'),
 
     path('', include(router.urls)),
