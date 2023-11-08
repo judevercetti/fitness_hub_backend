@@ -37,42 +37,51 @@ class PaymentSerializer(serializers.ModelSerializer):
         return obj.member.__str__()
         
 
-class EquipmentSerializer(serializers.ModelSerializer):
+class EquipmentSerializer(serializers.ModelSerializer):    
     class Meta:
         model = Equipment
         fields = '__all__'
         
 
 class GymClassSerializer(serializers.ModelSerializer):
+    instructor_name = serializers.SerializerMethodField()
+
     class Meta:
         model = GymClass
         fields = '__all__'
-        
-        
-# class UserProfileSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['username', 'email', 'userprofile']
-#         depth = 1
 
+    def get_instructor_name(self, obj):
+        return f'{obj.instructor.first_name} {obj.instructor.last_name}'
+        
+        
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['phone_number', 'address', 'position']
 
 
-class UserSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(source='userprofile.phone_number', allow_blank=True, allow_null=True)
+class EmployeeSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(source='userprofile.phone_number')
     address = serializers.CharField(source='userprofile.address', allow_blank=True, allow_null=True)
     position = serializers.ChoiceField(source='userprofile.position', choices=UserProfile.POSITION_CHOICES, allow_blank=True, allow_null=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone_number', 'address', 'position']
+        fields = ['id', 'first_name', 'last_name', 'phone_number', 'address', 'position']
+
+    def create(self, validated_data):
+        print(validated_data)
+        userprofile_data = validated_data.pop('userprofile', None)
+        validated_data['username'] = userprofile_data.get('phone_number')
+        user = User.objects.create(**validated_data)
+        if userprofile_data is not None:
+            UserProfile.objects.create(user=user, **userprofile_data)
+        return user
 
     def update(self, instance, validated_data):
         if 'userprofile' in validated_data:
             userprofile_data = validated_data.pop('userprofile')
+            validated_data['username'] = userprofile_data.get('phone_number')
             UserProfile.objects.update_or_create(user=instance, defaults=userprofile_data)
 
-        return super(UserSerializer, self).update(instance, validated_data)
+        return super(EmployeeSerializer, self).update(instance, validated_data)

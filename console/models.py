@@ -9,7 +9,7 @@ class UserProfile(models.Model):
         ('cleaner', 'Cleaner'),
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = models.CharField(max_length=20)
     address = models.CharField(max_length=255, blank=True, null=True)
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, blank=True, null=True)
 

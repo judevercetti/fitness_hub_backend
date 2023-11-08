@@ -13,7 +13,7 @@ router.register(r'attendances', AttendanceViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'equipments', EquipmentViewSet)
 router.register(r'employees', EmployeeViewSet)
-router.register(r'gymclasss', GymClassViewSet)
+router.register(r'gymclasses', GymClassViewSet)
 
 
 urlpatterns = [
