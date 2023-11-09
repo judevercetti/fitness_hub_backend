@@ -1,7 +1,30 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Attendance, Equipment, GymClass, Member, MembershipPlan, Payment, UserProfile
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['username'] = user.username
+        token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
+        token['phone_number'] = user.userprofile.phone_number
+        token['position'] = user.userprofile.position
+        return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data.update({'username': self.user.username})
+        data.update({'first_name': self.user.first_name})
+        data.update({'last_name': self.user.last_name})
+        data.update({'phone_number': self.user.userprofile.phone_number})
+        data.update({'position': self.user.userprofile.position})
+        return data
+    
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,7 +93,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'phone_number', 'address', 'position']
 
     def create(self, validated_data):
-        print(validated_data)
         userprofile_data = validated_data.pop('userprofile', None)
         validated_data['username'] = userprofile_data.get('phone_number')
         user = User.objects.create(**validated_data)

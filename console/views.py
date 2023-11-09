@@ -9,10 +9,16 @@ from django.db.models import Sum
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from django.utils import timezone
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Attendance, Equipment, GymClass, Member, MembershipPlan, Payment
 from .serializers import (AttendanceSerializer, EmployeeSerializer, EquipmentSerializer, GymClassSerializer,
-                          MemberSerializer, MembershipPlanSerializer, PaymentSerializer)
+                          MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer)
+
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 class DashboardView(APIView):
@@ -38,6 +44,15 @@ class DashboardView(APIView):
         payments_by_day = {datetime.strptime(payment['day'], '%Y-%m-%d').strftime("%a"): payment['total'] for payment in daily_payments}
         payments_list = [{'date': day, 'total': payments_by_day.get(day, 0)} for day in last_7_days]
 
+
+        today = timezone.now().date()
+        current_attendance = Attendance.objects.filter(check_out_time__isnull=True, created_at__date=today)
+        current_attendance_list = [{
+            'name': attendance.member.__str__(),
+            'time_in': attendance.check_in_time,
+        } for attendance in current_attendance]
+        
+
         data = {
             'member_count': member_count,
             'payment_count': payment_count,
@@ -45,6 +60,8 @@ class DashboardView(APIView):
             'attendance_count': attendance_count,
             'payment_amount': payment_amount,
             'payments_list': payments_list,
+            'current_attendance_count': current_attendance.count(),
+            'current_attendance_list': current_attendance_list,
         }
 
         return Response(data)
@@ -65,7 +82,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
 
 class MembershipPlanViewSet(viewsets.ModelViewSet):
-    queryset = MembershipPlan.objects.all()
+    queryset = MembershipPlan.objects.all().order_by('-id')
     serializer_class = MembershipPlanSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description']
@@ -89,7 +106,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-id')
     serializer_class = EmployeeSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name', 'last_name', 'phone_number']
+    search_fields = ['first_name', 'last_name', 'userprofile__phone_number']
 
 
 class GymClassViewSet(viewsets.ModelViewSet):
