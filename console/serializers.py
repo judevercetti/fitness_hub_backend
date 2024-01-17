@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import Attendance, Equipment, GymClass, Member, MembershipPlan, Payment, UserProfile
+from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, UserProfile
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -107,3 +107,15 @@ class EmployeeSerializer(serializers.ModelSerializer):
             UserProfile.objects.update_or_create(user=instance, defaults=userprofile_data)
 
         return super(EmployeeSerializer, self).update(instance, validated_data)
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = '__all__'

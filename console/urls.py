@@ -3,7 +3,7 @@ from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from django.contrib.auth import views as auth_views
 
-from .views import AttendanceViewSet, DashboardView, EmployeeViewSet, GymClassViewSet, MemberViewSet, MembershipPlanViewSet, MyTokenObtainPairView, PaymentReceiptView, PaymentViewSet, EquipmentViewSet
+from .views import AttendanceViewSet, DashboardView, DocumentViewSet, EmployeeViewSet, EventViewSet, GymClassViewSet, MemberViewSet, MembershipPlanViewSet, MyTokenObtainPairView, PaymentReceiptView, PaymentViewSet, EquipmentViewSet
 
 router = routers.DefaultRouter()
 router.register(r'members', MemberViewSet)
@@ -13,6 +13,8 @@ router.register(r'payments', PaymentViewSet)
 router.register(r'equipments', EquipmentViewSet)
 router.register(r'employees', EmployeeViewSet)
 router.register(r'gymclasses', GymClassViewSet)
+router.register(r'events', EventViewSet)
+router.register(r'documents', DocumentViewSet)
 
 
 urlpatterns = [

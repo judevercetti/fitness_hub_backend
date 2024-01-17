@@ -82,3 +82,22 @@ class GymClass(models.Model):
     
     def __str__(self):
         return self.name
+
+
+
+class Event(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    is_all_day = models.BooleanField(default=False)
+    is_recurring = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Document(models.Model):
+    name = models.CharField(max_length=100)
+    file = models.FileField(upload_to='documents/')
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)

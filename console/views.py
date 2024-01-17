@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Attendance, Equipment, GymClass, Member, MembershipPlan, Payment
-from .serializers import (AttendanceSerializer, EmployeeSerializer, EquipmentSerializer, GymClassSerializer,
+from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment
+from .serializers import (AttendanceSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
                           MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer)
 
 
@@ -27,6 +27,7 @@ class DashboardView(APIView):
         payment_count = Payment.objects.count()
         enrollment_count = 0
         attendance_count = Attendance.objects.count()
+        documents = Document.objects.all()
         payment_amount = Payment.objects.aggregate(
             total=Sum('amount'))['total']
         # fetch sum of daily payments to be used in a line chart for the past 7days, list object should be name of day and total
@@ -60,6 +61,7 @@ class DashboardView(APIView):
             'attendance_count': attendance_count,
             'payment_amount': payment_amount,
             'payments_list': payments_list,
+            'documents': documents,
             'current_attendance_count': current_attendance.count(),
             'current_attendance_list': current_attendance_list,
         }
@@ -122,3 +124,17 @@ class PaymentReceiptView(View):
         # Replace with your receipt content
         receipt_html = f"<h1>Payment Receipt</h1><p>Amount: ${payment.amount}</p>"
         return render(request, 'payments/payment_receipt.html', {'payment': payment})
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all().order_by('-id')
+    serializer_class = EventSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description']
+
+
+class DocumentViewSet(viewsets.ModelViewSet):
+    queryset = Document.objects.all().order_by('-id')
+    serializer_class = DocumentSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description']

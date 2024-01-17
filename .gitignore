@@ -1,4 +1,3 @@
 /venv
 /staticfiles
-config/settings.py
 db.sqlite3

@@ -52,3 +52,12 @@ class AttendanceAdmin(admin.ModelAdmin):
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'condition')
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'start_time', 'end_time')
+
+
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'file', 'created_at')
