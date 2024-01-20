@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment
+from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Event
 from .serializers import (AttendanceSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
                           MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer)
 
@@ -23,12 +23,15 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 class DashboardView(APIView):
     def get(self, request, format=None):
+        today = timezone.now().date()
+        
         member_count = Member.objects.count()
         payment_count = Payment.objects.count()
+        event_count = Event.objects.filter(start_time__gte=timezone.now()).count()
         enrollment_count = 0
         attendance_count = Attendance.objects.count()
         documents = Document.objects.all()
-        payment_amount = Payment.objects.aggregate(
+        payment_amount = Payment.objects.filter(created_at__date=today).aggregate(
             total=Sum('amount'))['total']
         # fetch sum of daily payments to be used in a line chart for the past 7days, list object should be name of day and total
         daily_payments = Payment.objects.extra(select={'day': 'date( created_at )'}).values('day').annotate(
@@ -46,7 +49,6 @@ class DashboardView(APIView):
         payments_list = [{'date': day, 'total': payments_by_day.get(day, 0)} for day in last_7_days]
 
 
-        today = timezone.now().date()
         current_attendance = Attendance.objects.filter(check_out_time__isnull=True, created_at__date=today)
         current_attendance_list = [{
             'name': attendance.member.__str__(),
@@ -57,6 +59,7 @@ class DashboardView(APIView):
         data = {
             'member_count': member_count,
             'payment_count': payment_count,
+            'event_count': event_count,
             'enrollment_count': enrollment_count,
             'attendance_count': attendance_count,
             'payment_amount': payment_amount,
