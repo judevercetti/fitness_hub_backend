@@ -1,8 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils import timezone
+from django.db.models import Sum
 
-from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, UserProfile
+from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Subscription, UserProfile
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -27,9 +30,15 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     
 
 class MemberSerializer(serializers.ModelSerializer):
+    subscription = serializers.SerializerMethodField()
+
     class Meta:
         model = Member
         exclude = 'date_of_birth', 'join_date'
+
+    def get_subscription(self, obj):
+        subscription = Subscription.objects.filter(member=obj, expiry_date__gte=timezone.now()).first()
+        return SubscriptionSerializer(subscription).data if subscription else None
 
 
 class MembershipPlanSerializer(serializers.ModelSerializer):
@@ -51,6 +60,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
 class PaymentSerializer(serializers.ModelSerializer):
     member_name = serializers.SerializerMethodField()
+    reason = serializers.SerializerMethodField()
 
     class Meta:
         model = Payment
@@ -59,6 +69,36 @@ class PaymentSerializer(serializers.ModelSerializer):
     def get_member_name(self, obj):
         return obj.member.__str__()
         
+    def get_reason(self, obj):
+        if obj.subscription is not None:
+            return f'{obj.subscription.membership_plan.name} Subscription'
+        elif obj.gym_class is not None:
+            return f'{obj.gym_class.name} Class'
+        else:
+            return None
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    member_name = serializers.SerializerMethodField()
+    membership_plan_name = serializers.SerializerMethodField()
+    balance = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subscription
+        fields = '__all__'
+
+    def get_member_name(self, obj):
+        return obj.member.__str__()
+        
+    def get_membership_plan_name(self, obj):
+        return obj.membership_plan.__str__()
+
+    def get_balance(self, obj):
+        payments = Payment.objects.filter(subscription=obj).aggregate(total=Sum('amount'))
+        total_paid = payments.get('total') or 0
+        balance = obj.membership_plan.price - total_paid
+        return str(balance)
+
 
 class EquipmentSerializer(serializers.ModelSerializer):    
     class Meta:
@@ -119,3 +159,13 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = '__all__'
+
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.views import View
@@ -10,10 +10,12 @@ from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.decorators import action
+from django.contrib.auth.hashers import check_password
 
-from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Event
-from .serializers import (AttendanceSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
-                          MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer)
+from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Event, Subscription
+from .serializers import (AttendanceSerializer, ChangePasswordSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
+                          MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer, SubscriptionSerializer)
 
 
 
@@ -21,6 +23,19 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
+class ChangePasswordView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        old_password = serializer.validated_data.get('old_password')
+        new_password = serializer.validated_data.get('new_password')
+        if not check_password(old_password, request.user.password):
+            return Response({"old_password": ["Your old password is incorrect."]}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.set_password(new_password)
+        request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
 class DashboardView(APIView):
     def get(self, request, format=None):
         today = timezone.now().date()
@@ -49,7 +64,7 @@ class DashboardView(APIView):
         payments_list = [{'date': day, 'total': payments_by_day.get(day, 0)} for day in last_7_days]
 
 
-        current_attendance = Attendance.objects.filter(check_out_time__isnull=True, created_at__date=today)
+        current_attendance = Attendance.objects.filter(created_at__date=today)
         current_attendance_list = [{
             'name': attendance.member.__str__(),
             'time_in': attendance.check_in_time,
@@ -78,10 +93,27 @@ class MemberViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['first_name', 'last_name', 'address', 'contact_number']
 
+    @action(detail=True, methods=['get'])
+    def subscriptions(self, request, pk=None):
+        member = self.get_object()
+        subscriptions = Subscription.objects.filter(member=member)
+        serializer = SubscriptionSerializer(subscriptions, many=True)
+        return Response(serializer.data)
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all().order_by('-id')
     serializer_class = PaymentSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['member__first_name', 'member__last_name']
+
+    @action(detail=False, methods=['get'])
+    def total(self, request, *args, **kwargs):
+        total_payments = Payment.objects.aggregate(total=Sum('amount')).get('total') or 0
+        return Response({'total_payments': total_payments})
+
+class SubscriptionViewSet(viewsets.ModelViewSet):
+    queryset = Subscription.objects.all().order_by('-id')
+    serializer_class = SubscriptionSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['member__first_name', 'member__last_name']
 

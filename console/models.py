@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -23,6 +24,8 @@ class MembershipPlan(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
 
 class Member(models.Model):
     first_name = models.CharField(max_length=50)
@@ -49,8 +52,39 @@ class Attendance(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class Subscription(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='subscriptions')
+    membership_plan = models.ForeignKey(MembershipPlan, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateTimeField()
+    expiry_date = models.DateTimeField()
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.start_date and self.membership_plan:
+            self.expiry_date = self.start_date + timedelta(days=self.membership_plan.duration)
+        super().save(*args, **kwargs)
+
+
+class GymClass(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
+    instructor = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    schedule = models.DateTimeField(blank=True, null=True)
+    max_capacity = models.IntegerField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+
 class Payment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, blank=True, null=True)
+    gym_class = models.ForeignKey(GymClass, on_delete=models.CASCADE, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, default='cash')
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,20 +103,6 @@ class Equipment(models.Model):
     purchase_date = models.DateField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-
-class GymClass(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    instructor = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
-    schedule = models.DateTimeField(blank=True, null=True)
-    max_capacity = models.IntegerField(blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return self.name
-
 
 
 class Event(models.Model):

@@ -49,6 +49,11 @@ class AttendanceAdmin(admin.ModelAdmin):
     list_display = ('member', 'check_in_time', 'check_out_time')
 
 
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('member', 'start_date', 'expiry_date')
+
+
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'condition')
