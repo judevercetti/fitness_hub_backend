@@ -114,8 +114,9 @@ class GymClassSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_instructor_name(self, obj):
-        return f'{obj.instructor.first_name} {obj.instructor.last_name}'
-        
+        if obj.instructor:
+            return f'{obj.instructor.first_name} {obj.instructor.last_name}'
+        return ''
         
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
