@@ -13,6 +13,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
 from django.contrib.auth.hashers import check_password
 from django.db.models.functions import Lower
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Event, Subscription
 from .serializers import (AttendanceSerializer, ChangePasswordSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
@@ -38,6 +40,9 @@ class ChangePasswordView(APIView):
     
     
 class DashboardView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, format=None):
         today = timezone.now().date()
         
