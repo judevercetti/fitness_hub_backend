@@ -127,7 +127,7 @@ class MembershipPlanViewSet(viewsets.ModelViewSet):
 
 
 class AttendanceViewSet(viewsets.ModelViewSet):
-    queryset = Attendance.objects.all()
+    queryset = Attendance.objects.all().order_by('-id')
     serializer_class = AttendanceSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['member__first_name', 'member__last_name']
