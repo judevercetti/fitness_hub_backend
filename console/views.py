@@ -13,12 +13,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
 from django.contrib.auth.hashers import check_password
 from django.db.models.functions import Lower
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Event, Subscription
 from .serializers import (AttendanceSerializer, ChangePasswordSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
-                          MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer, SubscriptionSerializer)
+                          MemberSerializer, MembershipPlanSerializer, MyTokenObtainPairSerializer, PaymentSerializer, SubscriptionSerializer, DashboardSerializer)
 
 
 
@@ -39,11 +37,8 @@ class ChangePasswordView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     
-class DashboardView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request, format=None):
+class DashboardViewSet(viewsets.ViewSet):
+    def list(self, request):
         today = timezone.now().date()
         
         member_count = Member.objects.count()
@@ -89,8 +84,9 @@ class DashboardView(APIView):
             'current_attendance_count': current_attendance.count(),
             'current_attendance_list': current_attendance_list,
         }
-
-        return Response(data)
+        
+        serializer = DashboardSerializer(data)
+        return Response(serializer.data)
 
 
 class MemberViewSet(viewsets.ModelViewSet):

@@ -3,9 +3,10 @@ from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from django.contrib.auth import views as auth_views
 
-from .views import AttendanceViewSet, ChangePasswordView, DashboardView, DocumentViewSet, EmployeeViewSet, EventViewSet, GymClassViewSet, MemberViewSet, MembershipPlanViewSet, MyTokenObtainPairView, PaymentReceiptView, PaymentViewSet, EquipmentViewSet, SubscriptionViewSet
+from .views import AttendanceViewSet, ChangePasswordView, DashboardViewSet, DocumentViewSet, EmployeeViewSet, EventViewSet, GymClassViewSet, MemberViewSet, MembershipPlanViewSet, MyTokenObtainPairView, PaymentReceiptView, PaymentViewSet, EquipmentViewSet, SubscriptionViewSet
 
 router = routers.DefaultRouter()
+router.register(r'dashboard', DashboardViewSet, basename='dashboard')
 router.register(r'members', MemberViewSet)
 router.register(r'membershipplans', MembershipPlanViewSet)
 router.register(r'attendances', AttendanceViewSet)
@@ -24,7 +25,6 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('payment/<int:payment_id>/receipt/',
          PaymentReceiptView.as_view(), name='payment_receipt'),

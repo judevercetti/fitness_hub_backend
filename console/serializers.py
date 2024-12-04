@@ -170,3 +170,20 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_new_password(self, value):
         validate_password(value)
         return value
+
+
+class DashboardSerializer(serializers.Serializer):
+    member_count = serializers.IntegerField()
+    payment_count = serializers.IntegerField()
+    event_count = serializers.IntegerField()
+    enrollment_count = serializers.IntegerField()
+    attendance_count = serializers.IntegerField()
+    payment_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    payments_list = serializers.ListField(
+        child=serializers.DictField()
+    )
+    documents = DocumentSerializer(many=True)
+    current_attendance_count = serializers.IntegerField()
+    current_attendance_list = serializers.ListField(
+        child=serializers.DictField()
+    )
