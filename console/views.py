@@ -12,6 +12,7 @@ from django.utils import timezone
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import action
 from django.contrib.auth.hashers import check_password
+from django.db.models.functions import Lower
 
 from .models import Attendance, Document, Equipment, Event, GymClass, Member, MembershipPlan, Payment, Event, Subscription
 from .serializers import (AttendanceSerializer, ChangePasswordSerializer, DocumentSerializer, EmployeeSerializer, EquipmentSerializer, EventSerializer, GymClassSerializer,
@@ -88,7 +89,7 @@ class DashboardView(APIView):
 
 
 class MemberViewSet(viewsets.ModelViewSet):
-    queryset = Member.objects.all().order_by('-id')
+    queryset = Member.objects.all().order_by(Lower('first_name'), Lower('last_name'))
     serializer_class = MemberSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['first_name', 'last_name', 'address', 'contact_number']
